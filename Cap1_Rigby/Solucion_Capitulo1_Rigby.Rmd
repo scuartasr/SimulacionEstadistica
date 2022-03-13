@@ -1,0 +1,88 @@
+---
+title: "Ejercicios del capítulo uno de Rigby"
+author: "Simón Cuartas Rendón"
+date: "Marzo de 2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include = FALSE}
+rm(list = ls())
+```
+
+En este documento se encuentra la solución a los problemas del capítulo uno sobre nociones básicas de probabilidad del libro *Distributions for modeling, location, scale and shape using GAMLSS in R* Rigby et al (2016) que impliquen código en `R`.
+
+# Punto uno
+
+Sea $Y$ una variable que representa la característica `aircont` de la sección 1.2.4. La distribución exponencial ajustada para $Y$ tiene media $ $\mu=64.125.$ 
+
+## Literal A
+
+Usar la f.d.a. de la distribución exponencial ajustada para encontrar $P(Y<50), \ P(Y>150), \ y \ P(35<Y<100)$.
+
+A continuación se realiza la lectura de los datos:
+
+```{r}
+library(gamlss)
+data(aircond)
+mu1 = 64.125
+```
+
+* $P(Y < 50)$
+
+```{r}
+pPO(50, mu = mu1)
+```
+
+La probabilidad de que el aire acondicionado de un avión Boeing 720 se averíe cincuenta horas de servicio o menos después del último daño es del 4.04%.
+
+* $P(Y > 150)$
+
+```{r}
+1-pPO(150, mu = mu1)
+```
+
+La probabilidad de que el aire acondicionado de un avión Boeing 720 se averíe 150 horas de servicio o más después del último daño es del 0%.
+
+* $P(35<Y<100)$
+```{r}
+pPO(100, mu = mu1) - pPO(35, mu = mu1)
+```
+
+La probabilidad de que el aire acondicionado de un avión Boeing 720 se averíe entre treinta y cien horas después de la última vez que se dañó es del 99.9936%.
+
+## Literal B
+
+Graficar el histograma, la fdp, fda y la fda inversa para la distribución exponencial ajustada.
+
+```{r}
+curve(dEXP(y, mu1), 0.01, 200, xname="y",ylab="f(y)", main="(a)") # pdf
+```
+
+```{r}
+curve(pEXP(y, mu1), 0.01, 200, xname="y",ylab="F(y)", main="(b)") # cdf
+```
+
+
+```{r}
+curve(qEXP(y, mu1), 0.01, 1, xname="y",
+      ylab=expression(y[p]=={F^{-1}} (p)),
+      main="(b)") # cdf
+```
+
+## Literal B
+
+Graficar las funciones de riesgo y superviviencia de la distribución exponencial ajustada.
+
+```{r}
+curve(pEXP(y, mu1, lower.tail = FALSE), 0.01, 200, xname="y",ylab="F(y)", main="(b)") # cdf
+```
+
+```{r}
+hEXP = hazardFun(family = "EXP")
+curve(hEXP(x, mu=mu1), 0,3)
+```
+

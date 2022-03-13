@@ -1,0 +1,58 @@
+---
+title: "Quiz sobre conceptos básicos de probabilidad"
+author: "Simón Cuartas Rendón"
+date: "12/3/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Punto uno
+
+Precio promedio de los autos de tipo pequeño
+
+```{r}
+library(MASS)
+data(Cars93)
+small = subset(Cars93, Type == "Small")
+mean(small$Price)
+```
+
+# Punto dos
+
+EEE x
+EEF x
+EFE x
+FEE x
+EFF
+FEF
+FFE
+FFF
+
+# Punto tres
+
+```{r}
+f <- function(x) {
+  0.5*x
+}
+integrate(f, 0, 1)
+```
+
+# Punto cuatro
+
+```{r}
+promedio = 0.01+0.03*2+3*0.13+4*0.25+5*0.39+6*0.17+0.02*7
+promedio
+```
+
+# Punto cinco
+
+```{r}
+data(cats)
+macho = subset(cats, Sex == "M")
+sd.htw = sd(macho$Hwt)
+sd.htw
+```
+
