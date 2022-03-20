@@ -144,15 +144,9 @@ paste("El error relativo es del:",
 set.seed(20220317)
 
 caras.consecutivas = function(x){
-  contador = 0
-  indice = 1
-  while(contador < 4 & indice < 10) {
-    if(x[indice] == "head" & x[indice] == x[indice+1]) {
-      contador = contador+1
-    }
-    indice = indice+1
-  }
-  ifelse(contador == 4, 1, 0)
+  secuencia = rle(x)
+  ifelse(length(which(secuencia$values == "head" & secuencia$lengths > 3)),
+         1, 0)
 }
 
 resultados.tarea3 = apply(X = lanzamientos,

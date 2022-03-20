@@ -1,0 +1,220 @@
+---
+title: "Ejercicios del capítulo tres. Números aleatorios"
+author: "Simón Cuartas Rendón"
+date: "Marzo de 2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+En este documento se resolverán diferentes ejercicios relacionados con el capítulo tres del curso, abarcado en las clases tres y cuatro (semana dos) sobre números aleatorios y pseudoaleatorios e integración numérica usando el método de Monte Carlo.
+
+# Parte uno. Ejercicios de las diapositivas.
+
+# Parte dos. Ejercicios del libro de Ross.
+
+*1.*  Si $x_0 = 5$ y $x_n = 3 x_{n-1} \ mod \ 150$, calcular $x_1, \ …, \ x_{10}$.
+
+Para resolver este ejercicio se va a definir la función `aleatorios.congruente`, indicando que van a ser generados números pseudoaleatorios empleando el método multiplicativo congruente. Esta función recibe tres parámetros: `n`, que es el número de números pseudoaleatorios que van a ser generados (sin contar la semilla); `m`, que es el módulo que va a ser empleado y `x0`, que es la semilla a usar.
+
+```{r}
+aleatorios.congruente <- function(n, m, x0) {
+  secuencia = c()
+  for (i in 0:(n)) {
+    secuencia[i+1] = x0
+    x0 = (3 * x0) %% m
+  }
+  return(secuencia)
+}
+
+aleatorios.congruente(10, 150, 5)
+```
+
+*2.* Si $x_0 = 3$ y $x_n = (5x_{n-1} + 7) mod 200$, encontrar $x_1, \ …, \ x_{10}$.
+
+Para resolver este ejercicio, se va a proceder de forma semejante al punto anterior pero usando la función `aleatorios.punto2` que recibe los mismos parámetros.
+
+```{r}
+aleatorios.punto2 <- function(n, m, x0) {
+  secuencia = c()
+  for (i in 0:n) {
+    secuencia[i+1] = x0
+    x0 = (5*x0 + 7 ) %% m
+  }
+  return(secuencia)
+}
+
+aleatorios.punto2(10, 200, 3)
+```
+
+*3.* Integrar numéricamente usando simulación de Monte Carlo:
+
+$$\int_{0}^{1} e^{e^x} dx$$
+
+Para poder atacar este problema y otros que no tengan que ver con integración impropia, se va a definir la función `integralMC`, la cual va a recibir los siguientes parámetros: `f`, que es la función $f(x)$ que va a ser integrada, `min` y `max`, que son los límites inferior y superior de la integral y `n`, que corresponden al número de puntos que van a ser considerados para aproximar la integral numéricamente, así como un parámetro denominado `semilla` usado para la reproducibilidad el ejercicio.
+
+```{r}
+integralMC <- function(f, min, max, n, semilla) {
+  set.seed(semilla)
+  puntos = runif(n = n, min = min, max = max)
+  return((max - min) * mean(f(puntos)))
+}
+```
+
+```{r}
+funcion3 = function(x) exp(exp(x))
+
+resultado3 = integralMC(f = funcion3, min = 0, max = 1, n = 100000,
+                        semilla = 20220320)
+```
+
+Y según el resultado anterior, se tiene que:
+
+$$\int_{0}^{1} e^{e^x} dx \approx `r round(resultado3, 4)`$$
+
+Con el objetivo de comparar este resultado con un valor más exacto, se va a calcular esta integral usando la función de $\color{blue}{\textsf{R}}$ `integrate` y se va a calcular el error relativo.
+
+```{r}
+resultado.real3 = integrate(funcion3, lower = 0, upper = 1)
+error.relativo3 = abs((resultado3 - resultado.real3$value) / resultado.real3$value) * 100
+```
+
+$$Error \ relativo = \left| \frac{`r round(resultado.real3$value, 4)` - `r round(resultado3, 4)`}{`r round(resultado.real3$value, 4)`} \right| \approx `r round(error.relativo3, 4)` \%$$
+
+Lo cual evidencia que es una buena aproximación.
+
+*3.* Integrar numéricamente usando simulación de Monte Carlo:
+
+$$\int_{0}^{1} (1 - x^2 ) ^ {3/2} dx$$
+
+Aprvechando la función definida antes, se tiene que:
+
+```{r}
+funcion4 = function(x) (1 - x^2) ^(1.5)
+
+resultado4 = integralMC(f = funcion4, min = 0, max = 1, n = 150000,
+                        semilla = 2022032022)
+```
+
+$$\int_{0}^{1} (1 - x^2 ) ^ {3/2} dx \approx `r round(resultado4, 4)`$$
+
+Y se puede estimar que el error relativo de este cálculo está dado por:
+
+```{r}
+resultado.real4 = integrate(funcion4, lower = 0, upper = 1)
+error.relativo4 = abs((resultado4 - resultado.real4$value) / resultado.real4$value) * 100
+```
+
+$$Error \ relativo = \left| \frac{`r round(resultado.real4$value, 4)` - `r round(resultado4, 4)`}{`r round(resultado.real4$value, 4)`} \right| \approx `r round(error.relativo4, 4)` \%$$
+
+Lo cual representa una estimación adecuada.
+
+*5.* Integrar numéricamente usando simulación de Monte Carlo
+
+$$\int_{-2}^{2} e^{x+x^2} dx$$
+
+```{r}
+funcion5 = function(x) exp(x + x^2)
+
+resultado5 = integralMC(f = funcion5, min = -2, max = 2, n = 200000,
+                        semilla = 2022032022)
+```
+
+Al aplicar la función que se definió manualmente previamente, se obtiene que:
+
+$$\int_{-2}^{2} e^{x+x^2} dx \approx `r round(resultado5, 4)`$$
+
+Y esto se puede comparar con la función nativa de $\color{blue}{\textsf{R}}$ `integrate`:
+
+```{r}
+resultado.real5 = integrate(funcion5, lower = -2, upper = 2)
+error.relativo5 = abs((resultado5 - resultado.real5$value) / resultado.real5$value) * 100
+```
+
+De manera que el error relativo es:
+
+$$Error \ relativo = \left| \frac{`r round(resultado.real5$value, 4)` - `r round(resultado5, 4)`}{`r round(resultado.real5$value, 4)`} \right| \approx `r round(error.relativo5, 4)` \%$$
+
+Lo cual representa una muy buena aproximación.
+
+*6.* Integrar numéricamente usando simulación de Monte Carlo:
+
+$$\int_{0}^{\infty} x(1+x^2)^{-2} dx$$
+
+Nótese que en este caso ya no es posible emplear la función programada previamente, por lo que se hace necesario crear una nueva función para funciones impropias de este estilo considerando la sustitución que debe realizarse.
+
+```{r}
+integralMC.impropia <- function(f, n, semilla) {
+  sustitucion <- function(x) 1 / (x+1)
+  integrando <- function(x) f(1/x - 1) / (x ^2)
+  set.seed(semilla)
+  puntos = runif(n = n, min = 0, max = 1)
+  return(mean(integrando(puntos)))
+}
+```
+
+```{r}
+funcion6 = function(x) x * (1 + x^2)^(-2)
+resultado6 = integralMC.impropia(funcion6, n = 250000, semilla = 2022032010)
+```
+
+Y con esto se llega a que:
+
+$$\int_{0}^{\infty} x(1+x^2)^{-2} dx \approx = `r round(resultado6, 4)`$$
+
+
+Y esto se puede comparar con la función nativa de $\color{blue}{\textsf{R}}$ `integrate`:
+
+```{r}
+resultado.real6 = integrate(funcion6, lower = 0, upper = Inf)
+error.relativo6 = abs((resultado6 - resultado.real6$value) / resultado.real6$value) * 100
+```
+
+De manera que el error relativo es:
+
+$$Error \ relativo = \left| \frac{`r round(resultado.real6$value, 4)` - `r round(resultado6, 4)`}{`r round(resultado.real6$value, 4)`} \right| \approx `r round(error.relativo6, 4)` \%$$
+
+Lo cual representa una muy buena aproximación.
+
+*7.* Calcular con integración de Monte Carlo:
+
+$$ \int_{-\infty}^{\infty} e^{-x^2} dx$$
+
+Notar que la función que debe ser integrada es par, ya que $g(-x) = exp(- (-x))^2 = exp(-x^2)=g(x)$, por lo que se puede integrar en una mitad del intervalo de integración, en particular entre cero e infinito positivo, y luego multiplicar el resultado por dos. Esto resultará útil para poder emplear la función de $\color{blue}{\textsf{R}}$ que fue planteada previamente.
+
+```{r}
+funcion7 = function(x) exp(- (x^2))
+resultado7 = 2* integralMC.impropia(funcion7, n = 250000, semilla = 20220320)
+```
+
+De manera que:
+
+$$\int_{-\infty}^{\infty} e^{-x^2} dx \approx `r round(resultado7, 4)`$$
+Y esto se puede comparar con la función nativa de $\color{blue}{\textsf{R}}$ `integrate`:
+
+```{r}
+resultado.real7 = integrate(funcion7, lower = -Inf, upper = Inf)
+error.relativo7 = abs((resultado7 - resultado.real7$value) / resultado.real7$value) * 100
+```
+
+De manera que el error relativo es:
+
+$$Error \ relativo = \left| \frac{`r round(resultado.real7$value, 4)` - `r round(resultado7, 4)`}{`r round(resultado.real7$value, 4)`} \right| \approx `r round(error.relativo7, 4)` \%$$
+
+Lo cual representa una muy buena aproximación.
+
+*8.* Resolver numéricamente la siguiente integral usando el método de Monte Carlo
+
+$$\int_{0}^{1} \int_{0}^{1} e^{(x+y)^2} dy \ dx$$
+
+```{r}
+funcion8 <- function(x) exp((x[1]+x[2])^2)
+puntos = 250000
+set.seed(2022032012)
+U <- matrix(runif(n = 2*puntos), ncol=2)
+mean(apply(X=U, MARGIN=1, FUN=funcion8))
+```
+ 
+Con ayuda de Wolfram Alpha se puede obtener que esta integral es aproximadamente igual a 4.8992, lo que muestra que la integral numérica realizada consigue una buena aproximación.
