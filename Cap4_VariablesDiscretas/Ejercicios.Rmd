@@ -1,0 +1,161 @@
+---
+title: "Generación de variablea aleatorias discretas"
+author: "Simón Cuartas Rendón"
+date: "Marzo de 2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Ejercicios de las diapositivas
+
+## Tarea uno. Permutaciones.
+
+**Objetivo.** Crear una función en $\color{blue}{\textsf{R}}$ que implemente la metodología sugerida en el *remarks* de la página cincuenta del libro ***Simulation*** de Ross.
+
+```{r}
+permutacion <- function(cantidad, semilla) {
+  set.seed(semilla)
+  aleatorios <- runif(cantidad, min = 0, max = 1)
+  indices <- 1:semilla
+  
+  # Lista que relaciona los índices con los números aleatorios generados
+  lista <- c(indices = aleatorios)
+  return(order(lista, decreasing = TRUE))
+}
+
+# Ejemplo
+permutacion(10, 20220304)
+```
+
+## Tarea dos. Bernoulli
+
+**Objetivo.** Crear una funcón en $\color{blue}{\textsf{R}}$ que genere una secuencia aleatoria de ceros y unos, basado en la distribución Bernoulli.
+
+Para conseguir esto simplemente se va a echar mano de la función `rbinom`, la cual genera un número dado de números aleatorios basados en la distribución Bernoulli, lo cual es útil en este caso teniendo en cuenta que esta distribución consiste en una cantidad en ensayos Bernoulli independientes entre sí con una cierta probabilidad de éxito.
+
+```{r}
+r_bernoulli <- function(cantidad, semilla, prob.exito) {
+  set.seed(semilla)
+  return(rbinom(n = cantidad, size = 1, prob = prob.exito))
+}
+
+# Ejemplo
+
+r_bernoulli(cantidad = 5, semilla = 20220303, prob.exito = 0.5)
+```
+
+## Ejercicio de clase. Método de aceptación y rechazo
+
+```{r}
+
+#  Target distribution
+p <- c(0.11, 0.12, 0.09, 0.08, 0.12,
+0.10, 0.09, 0.09, 0.10, 0.10)
+# To obtain the constant
+k <- max(p / 0.10)
+k
+
+rdiscrete1 <- function(n) {
+i <- 0
+x <- numeric(n)
+while (i < n) {
+y <- sample(x=1:10, size=1)
+u <- runif(1)
+if (u <= p[y] / (0.1 * k) ) {
+i <- i + 1
+x[i] <- y
+}
+}
+return(x)
+}
+
+
+rdiscrete2 <- function(n) {
+x <- rep(0, n)
+u <- runif(n)
+x[ which(u < p[1]) ] <- 1
+x[ which(u > p[1] & u <= sum(p[1:2])) ] <- 2
+x[ which(u > sum(p[1:2]) & u <= sum(p[1:3])) ] <- 3
+x[ which(u > sum(p[1:3]) & u <= sum(p[1:4])) ] <- 4
+x[ which(u > sum(p[1:4]) & u <= sum(p[1:5])) ] <- 5
+x[ which(u > sum(p[1:5]) & u <= sum(p[1:6])) ] <- 6
+x[ which(u > sum(p[1:6]) & u <= sum(p[1:7])) ] <- 7
+x[ which(u > sum(p[1:7]) & u <= sum(p[1:8])) ] <- 8
+x[ which(u > sum(p[1:8]) & u <= sum(p[1:9])) ] <- 9
+x[ which(u > sum(p[1:9]) & u <= sum(p[1:10])) ] <- 10
+return(x)
+}
+
+system.time(rdiscrete1(n=1000000))
+system.time(rdiscrete2(n=1000000))
+
+```
+
+# Taller
+
+## Punto uno. Ejercicios del libro de Ross.
+
+### 1.1.
+
+```{r}
+ejercicio2.ross <- function(probabilidades) {
+  return(sample.int(n = length(probabilidades),
+                    size = 1,
+                    prob = probabilidades))
+}
+ejercicio2.ross(p)
+```
+
+## 1.2. Selección de cartas
+
+Este ejercicio pide encontrar la media y la varianza del número de cartas cuyo número coincide con su posición en una baraja de cartas aleatoria cuyas cartas están numeradas del uno al cien y son unívocas.
+
+```{r}
+generacion.cartas <- function(cantidad) {
+  resultado <- data.frame()
+  for(i in 1:cantidad) {
+    resultado <- rbind(resultado, sample.int(100))
+  }
+  return(resultado)
+}
+
+cartas <- generacion.cartas(5000)
+
+sumador <- function(x) {
+  contador <- 0
+  for (i in 1:length(x)) {
+    if(x[i] == i) {
+      contador <- contador+1
+    }
+  }
+  return(contador)
+}
+
+resultados <- apply(X = cartas,
+                    MARGIN = 1,
+                    FUN = sumador)
+media <- mean(resultados)
+varianza <- var(resultados)
+```
+
+# 1.3. Dados
+
+En este ejercicio se pide encontrar el número esperado de veces que deben ser lanzados dos dados hasta que se obtengan todos los resultados posibles (2, 3, ..., 11 y 12)
+
+```{r}
+lanzador_dados <- function() {
+  resultados <- numeric(0)
+  while(length(unique(resultados)) < 11) {
+    resultados <- c(resultados, (sample.int(6, 1) + sample.int(6, 1)))
+  }
+  return(length(resultados))
+}
+
+lanzamientos <- replicate(n = 50000, expr = lanzador_dados())
+media.lanzamientos <- mean(lanzamientos)
+```
+
+El número de lanzamientos promedio es 61.35786

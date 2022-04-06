@@ -1,0 +1,57 @@
+---
+title: "Capítulo 5. Generación de variables aleatorias continuas"
+author: "Simón Cuartas Rendón"
+date: "Abril de 2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list = ls())
+```
+
+# Talleres
+
+## Ejercicios del libro de Ross.
+
+### 1.
+
+* **Objetivo.** Crear una función para generar variables aleatorias de la función $f(x) = \frac{e^x}{e-1}$ para $0 \leq x \leq 1$.
+
+```{r}
+r_ex1 <- function(cantidad, semilla) {
+  set.seed(semilla)
+  u <- runif(cantidad, min = 0, max = 1)
+  valor <- log((exp(1)-1)*u+1)
+  return(valor)
+}
+
+# Gráficamente
+
+distr1 <- function(x) (exp(x)-1)/(exp(1) - 1)
+x1 <- seq(0, 1, length.out = 100000)
+y1.1 <- distr1(x1)
+y1.2 <- r_ex1(length(x1), 20220405)
+df1 <- data.frame(x1, y1.1, y1.2)
+
+library(ggplot2)
+library(scales)
+
+ggplot(df1) +
+  geom_line(aes(x = x1, y = y1.1), colour = "red") +
+  geom_histogram(aes(x = y1.2, y = (..count..)/sum(..count..)),
+                 colour = "green", bins = 5)
+```
+```{r}
+funcion3 <- function(x) {
+  (2 <= x & x <= 3) * (0.5*(x - 2)) + (3 < x & x <= 6) * (0.5*(2 - x/3))
+}
+
+x1 <- seq(2, 6, length.to = 10000)
+
+plot(x1, funcion3(x1), type = 'l', col = 'red',
+     xlim = c(1, 7))
+grid(nx = NULL, ny = NULL)
+
+```
+

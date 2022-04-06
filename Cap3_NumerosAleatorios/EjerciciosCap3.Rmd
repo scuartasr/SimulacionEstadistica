@@ -13,6 +13,171 @@ En este documento se resolverán diferentes ejercicios relacionados con el capí
 
 # Parte uno. Ejercicios de las diapositivas.
 
+*1.* Crear una función de R que, a partir de una semilla y un número deseado de números pseudoaleatorios, se emplee el generador de números aleatorios de Von Neumann.
+
+
+```{r}
+vonNeumann <- function(n, semilla) {
+    paste("La semilla a usar es: ", semilla)
+    resultado <- vector()
+    resultado <- c(resultado, semilla)
+    for (i in 1:(n-1)) {
+      semilla <-  semilla ^ 2             # Se eleva al cuadrado
+      #semilla <- as.character(semilla)
+      if (nchar(semilla) < 10) {          # Si no tiene diez dígitos...
+        semilla <- sprintf("%010d", semilla) # ... se los completa
+      }
+      semilla <- as.numeric(substr(semilla, start = 3, stop = 7)) # 5 dís central
+      resultado <- c(resultado, semilla)
+    }
+    return(resultado)
+  }
+
+```
+
+*2.* Crear una función en R que implemente el generador congruencial lineal, cuyo resultado entregue una lista con dos objetos: la secuencia de números enteros y la secuencia de números pseudoaleatorios.
+
+```{r}
+lgc <- function(semilla, multiplicador, incremento, modulo, cantidad) {
+  # Verificación de que la semilla sea menor que el módulo
+  if (semilla >= modulo) {
+    paste("Recuerde que la semilla debe ser menor que el módulo.")
+  }
+  
+  # Si la semilla es menor que el módulo, se puede ejecutar la función:
+  else {
+    # Creación de la lista a usar
+    resultado <- list()
+    #resultado[[1]] <- c(semilla, paste(semilla, "/", modulo, sep = ""))
+    
+    # Iteración para obtener la cantidad deseada de números aleatorios
+    for (i in 1:(cantidad+1)) {
+      semilla <- (multiplicador * semilla + incremento) %% modulo
+      resultado[[i]] <- c(semilla,
+                            paste(semilla, "/", modulo, sep = ""))
+    }
+    
+    # Resultado
+    names(resultado) <- 0:(cantidad)
+    return(resultado)
+  }
+}
+```
+
+**3.** Observar la tasa de aceptación del test de Kolmogorov-Smirnov basado en el p valor de la uniformidad de los números aleatorios generados con la función `runif` de R.
+
+```{r}
+generador.uniforme <- function(n, ...) {
+  return(ks.test(x = runif(n, ...),
+                 y = 'punif',
+                 min = 0,
+                 max = 1)$p.value)
+}
+# x <- replicate(n = 5000, expr = generador.uniforme(n = 5))
+# sum(x > 0.05)/5000
+
+aceptacion <- function(cantidad, numero.tests) {
+  resultado <- data.frame()
+  for (i in 1:length(cantidad)) {
+    valores.p <- replicate(n = numero.tests, expr = generador.uniforme(n = cantidad[i]))
+    resultado[i, 1] <- cantidad[i]
+    resultado[i, 2] <- sum(valores.p > 0.05)/numero.tests
+  }
+  
+  return(resultado)
+}
+
+#ensayos <- c(seq(5, 500, 5), seq(550, 1000, 50))
+ensayos <- seq(5, 1000, 5)
+resultado <- aceptacion(ensayos, 1000)
+```
+
+Y con esto se puede generar el gráfico requerido.
+
+```{r}
+library(ggplot2)
+library(scales)
+
+grafico1 <- ggplot(data = resultado, aes(x = V1, y = V2)) +
+  geom_point() + geom_line() +
+  ggtitle("Porcentaje de aceptación en la prueba de Kolmogorov-Smirnov",
+          subtitle = "al generar números aleatorios con runif") +
+  xlab("Cantidad de números aleatorios generados") +
+  ylab("Porcentaje de aceptación de H[0]") +
+  theme_minimal() +
+  scale_y_continuous(labels = scales::percent,
+                     limits = c(0.9, 1))
+
+grafico1
+```
+**4.** Integrales de menos infinito a infinito
+
+```{r}
+integral.impropia <- function(funcion, puntos, semilla) {
+  # Primer tramo. De cero a infinito
+  h <- function(y) f(1/y-1)/(y^2)
+  set.seed(semilla)
+  puntos = runif(n = puntos, min = 0, max = 1)
+  primer.tramo <- mean(h(puntos))
+  
+  # Segundo tramo. De menos infinito a cero
+  g <- function(x) f(-x)
+  k <- function(y) g(1/y-1)/(y^2)
+  set.seed(semilla)
+  puntos = runif(n = puntos, min = 0, max = 1)
+  segundo.tramo <- mean(k(puntos))
+  return(primer.tramo + segundo.tramo)
+}
+
+# Ejemplo
+
+f <- function(x) 5/(1+x^2)
+integral.impropia(funcion = f, puntos = 500000, semilla = 20220403)
+```
+
+Y como se puede ver, el test genera números que se distribuyen como una uniforme entre cero y uno en aproximadamente el 95 % de las ocasiones.
+
+**5.** Integrales múltiples
+
+```{r}
+fun <- function(x) exp(-x[1]-x[2])
+k <- 5
+U <- matrix(runif(n=2*k), ncol=2)
+mean(apply(X=U, MARGIN=1, FUN=fun))
+
+```
+
+**6.** Caso más general para integrales dobles
+
+```{r}
+integral.doble.definida <- function(funcion, a, b, c, d, puntos, semilla) {
+  set.seed(semilla)
+  integral.y <- runif(n = puntos, min = a, max = b)
+  set.seed(semilla)
+  integral.x <- runif(n = puntos, min = c, max = d)
+  matriz <- cbind(integral.x, integral.y)
+  return(mean(apply(X = matriz,
+              MARGIN = 1,
+              FUN = funcion)))
+}
+
+funcion <- function(x) 10 + x[1]^2 + 3*x[2]^2
+integral.doble.definida(funcion, 0, 2, 0, 1, puntos = 1000, semilla = 20220403)
+```
+
+**7.** Estimación de pi.
+
+```{r}
+puntos.x <- runif(50000, min = -1, max = 1)
+puntos.y <- runif(50000, min = -1, max = 1)
+puntos <- as.data.frame(cbind(puntos.x, puntos.y))
+puntos$verificacion <- ifelse((puntos$puntos.x^2 + puntos$puntos.y^2 < 1),
+                              1,
+                              0)
+numero.pi = 4*sum(puntos$verificacion)/50000
+```
+
+
 # Parte dos. Ejercicios del libro de Ross.
 
 *1.*  Si $x_0 = 5$ y $x_n = 3 x_{n-1} \ mod \ 150$, calcular $x_1, \ …, \ x_{10}$.
@@ -218,3 +383,7 @@ mean(apply(X=U, MARGIN=1, FUN=funcion8))
 ```
  
 Con ayuda de Wolfram Alpha se puede obtener que esta integral es aproximadamente igual a 4.8992, lo que muestra que la integral numérica realizada consigue una buena aproximación.
+
+# Parte tres
+
+**1.** Ejercicio 7.1 del libro ***Estadística computacional.***
