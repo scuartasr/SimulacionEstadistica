@@ -184,11 +184,10 @@ simulacion_utilidad <- function(n, costo_fijo, precio) {
   utilidades <- c()
   
   for (i in 1:n) {
-    costo_variable <- runif(1, 16, 24)
-    costo_total <- costo_fijo + costo_variable
+    costo_variable <- runif(1, 16, 24) * 60000
     demanda <- rnorm(1, mean = 1200, sd = 300)
-    ventas <- demanda * 50
-    utilidad <- ventas - costo_total
+    ventas <- demanda * precio
+    utilidad <- ventas - costo_variable - costo_fijo
     utilidades <- c(utilidades, utilidad)
   }
   
@@ -196,10 +195,90 @@ simulacion_utilidad <- function(n, costo_fijo, precio) {
   return(utilidades)
 }
 
-x <- simulacion_utilidad(10000, 30000, 50)
+x <- simulacion_utilidad(10000, costo_fijo = 30000, precio = 50)
 
 # Literal A. Utilidad media
 paste("La utilidad media es de ", mean(x))
+
+# Literal B. Distribución empírica de la utilidad
+density(x)
+plot(density(x))
+
+# Literal C.
+perdida <- x[x < 0]
+prob_perdida <- length(perdida) / length(x)
+
+
+### ### ---------------------------------------------------
+### ### Ejercicio cinco. Ventas del muñeco Bobby
+### ### ---------------------------------------------------
+
+rm(list = ls())
+
+simulacion_juguete <- function(n, fijo, variable, venta,
+                               produccion, salvamento) {
+  # Creación de la tabla
+  tbl <- data.frame(matrix(ncol = 8, nrow = n))
+  colnames(tbl) <- c("simulacion", "demanda", "costo_var", "costo_tot",
+                     "navidad", "salvamento", "total", "utilidad")
+  
+  # Simulación
+  
+  tbl$simulacion <- seq(1, n)
+  tbl$demanda <- round(rnorm(n, mean = 60000, sd = 15000))
+  tbl$costo_var <- produccion * variable
+  tbl$costo_tot <- tbl$costo_var + fijo
+  tbl$navidad <- ifelse(tbl$demanda > produccion,
+                        produccion * venta,
+                        tbl$demanda * venta)
+  tbl$salvamento <- ifelse(tbl$demanda >= produccion,
+                           0,
+                           10 * (produccion - tbl$demanda))
+  tbl$total <- tbl$navidad + tbl$salvamento
+  tbl$utilidad <- tbl$total - tbl$costo_tot
+
+  # Retorno
+  retorno <- list(mean(tbl$utilidad), tbl)
+  names(retorno) <- c("media", "datos")
+  return(retorno)
+  
+}
+
+simulacion_60K <- simulacion_juguete(10000, 100000, 34, 42, 60000, 10)
+simulacion_50K <- simulacion_juguete(10000, 100000, 34, 42, 50000, 10)
+simulacion_70K <- simulacion_juguete(10000, 100000, 34, 42, 70000, 10)
+
+resultados <- as.numeric(c(paste0(5:7,"0000")))
+utilidades <- c(simulacion_50K$media, simulacion_60K$media,
+                simulacion_70K$media)
+resumen <- data.frame(resultados, utilidades)
+barplot(utilidades~resultados)
+title("Utilidades según la producción")
+
+### ### ---------------------------------------------------
+### ### Ejercicio seis. Borrachito.
+### ### ---------------------------------------------------
+
+rm(list = ls())
+
+c1 <- rep(1, 7)
+c2 <- rep(2, 7)
+c3 <- rep(3, 7)
+c4 <- rep(4, 7)
+c5 <- rep(5, 7)
+
+habitacion <- rbind(c1, c2, c3, c4, c5)
+# 
+# borrachito <- function() {
+#   fila <- 1
+#   contador <- 
+#   
+#   while(f)
+# }
+
+
+
+
 
 
 
