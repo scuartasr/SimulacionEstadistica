@@ -125,7 +125,7 @@ rm(list = ls())
 
 costo_compra <- function(x) {
   ifelse(x < 0.45, 11,
-         ifelse(0.75, 12, 10))
+         ifelse(x < 0.75, 12, 10))
 }
 
 costo_mano <- function(x) {
@@ -178,36 +178,38 @@ paste("La probabilidad de que la utilidad sea menor a $5 es de",
 ### ### ---------------------------------------------------
 rm(list = ls())
 
-costo_fijo <- 30000
-
-simulacion_utilidad <- function(n, costo_fijo, precio) {
-  utilidades <- c()
+simulacion_madeira <- function(n, costo_fijo = 30000, precio = 50, 
+                               cv_min = 16, cv_max = 24, media = 1200,
+                               varianza = 300) {
+  tbl <- data.frame(matrix(ncol = 4, nrow = n))
+  colnames(tbl) <- c("demanda", "costo_variable", "costo_total", "utilidad")
   
   for (i in 1:n) {
-    costo_variable <- runif(1, 16, 24) * 60000
-    demanda <- rnorm(1, mean = 1200, sd = 300)
-    ventas <- demanda * precio
-    utilidad <- ventas - costo_variable - costo_fijo
-    utilidades <- c(utilidades, utilidad)
+    tbl$demanda[i] <- round(rnorm(1, mean = media, sd = sqrt(varianza)))
+    tbl$costo_variable[i] <- round(runif(1, cv_min, cv_max), 2)
+    tbl$costo_total[i] = costo_fijo + tbl$demanda[i] * tbl$costo_variable[i]
+    tbl$utilidad[i] = tbl$demanda[i] * precio - tbl$costo_total[i]
   }
   
-  
-  return(utilidades)
+  return(tbl)
 }
 
-x <- simulacion_utilidad(10000, costo_fijo = 30000, precio = 50)
+
+simulac_4 <- simulacion_madeira(n = 50000, costo_fijo = 30000)
 
 # Literal A. Utilidad media
-paste("La utilidad media es de ", mean(x))
+
+paste("La utilidad media es $", round(mean(simulac_4$utilidad)))
 
 # Literal B. Distribución empírica de la utilidad
-density(x)
-plot(density(x))
+density(simulac_4$utilidad)
+plot(density(simulac_4$utilidad))
 
 # Literal C.
-perdida <- x[x < 0]
-prob_perdida <- length(perdida) / length(x)
-
+perdida <- simulac_4$utilidad[simulac_4$utilidad < 0]
+prob_perdida <- length(perdida) / length(simulac_4$utilidad)
+paste("La probabilidad de que haya pérdidas es de ",
+      round(prob_perdida * 100, 4), "%")
 
 ### ### ---------------------------------------------------
 ### ### Ejercicio cinco. Ventas del muñeco Bobby
@@ -268,13 +270,9 @@ c4 <- rep(4, 7)
 c5 <- rep(5, 7)
 
 habitacion <- rbind(c1, c2, c3, c4, c5)
-# 
-# borrachito <- function() {
-#   fila <- 1
-#   contador <- 
-#   
-#   while(f)
-# }
+diagonal <- c(-1, 1)
+
+
 
 
 
